@@ -67,14 +67,14 @@ target_link_libraries(cimgui PRIVATE glfw)
 
 # -- PROJECT -- #
 add_executable(${PROJECT_NAME} src/main.c)
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
         glfw
         glad
         cglm
         cimgui
 )
-target_include_directories(${PROJECT_NAME} 
+target_include_directories(${PROJECT_NAME}
     PRIVATE
         src/
 )
