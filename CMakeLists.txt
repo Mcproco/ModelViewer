@@ -32,8 +32,14 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/cimgui/cimgui.git
     SOURCE_SUBDIR NULL
 )
+FetchContent_Declare(
+    stb_image
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG master
+)
+
 find_package(OpenGL REQUIRED)
-FetchContent_MakeAvailable(glad glfw3 cglm cimgui)
+FetchContent_MakeAvailable(glad glfw3 cglm cimgui stb_image)
 glad_add_library(glad
     STATIC
     API gl:core=3.3
@@ -52,6 +58,19 @@ add_library(cimgui
         ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_glfw.cpp
         ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
 )
+add_library(stb_image
+    INTERFACE
+)
+file(COPY ${stb_image_SOURCE_DIR}/stb_image.h 
+    DESTINATION 
+        "${PROJECT_SOURCE_DIR}/build/vendor/stb_image-build/include/stb_image")
+
+file(COPY ${stb_image_SOURCE_DIR}/stb_image_write.h 
+    DESTINATION 
+        "${PROJECT_SOURCE_DIR}/build/vendor/stb_image-build/include/stb_image")
+
+set(STBIMAGE_INSTALL_DIR "${PROJECT_SOURCE_DIR}/build/vendor/stb_image-build")
+
 target_include_directories(cimgui
     PUBLIC
         ${cimgui_SOURCE_DIR} 
@@ -66,7 +85,7 @@ target_link_libraries(cimgui PRIVATE glfw)
 
 
 # -- PROJECT -- #
-add_executable(${PROJECT_NAME} src/main.c)
+add_executable(${PROJECT_NAME} src/main.c src/shader.c src/shader.h)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         glfw
@@ -77,6 +96,7 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         src/
+        build/vendor/stb_image-build/include
 )
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     -DCIMGUI_USE_OPENGL3 
