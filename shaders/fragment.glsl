@@ -1,6 +1,12 @@
 #version 330 core
+in vec2 TexCoord;
+in vec3 Color;
+
 out vec4 FragColor;
 
+//what texture should we use? think of tex as a id. This id is set via glUniformli(<uniform-location>); You have to bind a texture to that id / texture unit 
+uniform sampler2D tex;
+
 void main() {
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    FragColor = texture(tex, TexCoord) * vec4(Color, 1.0f);
 }

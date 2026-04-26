@@ -1,3 +1,6 @@
+#include "cglm/vec4.h"
+#include <stdio.h>
+#define STB_IMAGE_IMPLEMENTATION
 #define GLAD_GL_IMPLEMENTATION
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include <stdbool.h>
@@ -6,6 +9,9 @@
 #include <cimgui_impl.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <stb_image/stb_image.h>
+#include <cglm/cglm.h>
+#include <cglm/types.h>
 #include "shader.h"
 
 const unsigned int WIDTH = 800;
@@ -14,9 +20,10 @@ const char* TITLE = "HERROW WORLD!";
 
 const float vertices[] = {
 //   X         Y         Z          R       G       B
-    -0.5f,    -0.5f,     0.0f,      1.0f,   0.0f,   0.0f,
-     0.5f,    -0.5f,     0.0f,      0.0f,   1.0f,   0.0f,
-     0.0f,     0.5f,     0.0f,      0.0f,   0.0f,   1.0f,
+     0.5f,     0.5f,     0.0f,      1.0f,   0.0f,   0.0f,       1.0f, 1.0f,
+     0.5f,    -0.5f,     0.0f,      0.0f,   1.0f,   0.0f,       1.0f, 0.0f,
+    -0.5f,    -0.5f,     0.0f,      0.0f,   0.0f,   1.0f,       0.0f, 0.0f,
+    -0.5f,     0.5f,     0.0f,      0.0f,   0.0f,   1.0f,       0.0f, 1.0f,
 };
 
 const unsigned int indices[] = {
@@ -45,20 +52,55 @@ unsigned int genShaderProgram(const char *vertexSrc, const char *fragmentSrc) {
 }
 
 void init() {
-
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+}
+
+void initVertexBuffer() {
+}
+
+void initTexture(unsigned int *texture) {
+
+    glGenTextures(1, texture);
+    glBindTexture(GL_TEXTURE_2D, *texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("./res/container.jpg", &width, &height, &nrChannels, 0);
+
+    if (data) {
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+    } else {
+        printf("Wtf");
+    }
+
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, *texture);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 
 }
 
-void processInput(GLFWwindow *window) {
+void processFrameBuffer(GLFWwindow *window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
 
+void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(window, true); 
     }
-
 }
 
 int main() {
@@ -71,7 +113,11 @@ int main() {
         return EXIT_FAILURE;
     }
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, processFrameBuffer);
     gladLoadGL(glfwGetProcAddress);
+
+    unsigned int texture;
+    initTexture(&texture);
 
     //unsigned int shaderProgram = genShaderProgram(vertexShaderSource, fragmentShaderSource);
     ShaderProgram shaderProgram;
@@ -87,11 +133,14 @@ int main() {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //define the VBO's size, data, and storage type
 
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); //define how the VBO is organized
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
             glEnableVertexAttribArray(0);
 
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); //define how the VBO is organized
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
             glEnableVertexAttribArray(1);
+
+            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+            glEnableVertexAttribArray(2);
             
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -102,6 +151,14 @@ int main() {
 
     ShaderUseProgram(shaderProgram);
 
+    /* Literally just an array */
+    vec4 a; glm_vec4_zero(a);
+    
+
+    /* Set the proper uniform sampler2D variable to the right texture unit */
+    glUniform1i(ShaderUniformLocation("Texture0", shaderProgram), 0);
+    
+
     while (!glfwWindowShouldClose(window)) {
 
         processInput(window);
@@ -110,8 +167,9 @@ int main() {
         glClearColor(0, 0, 0, 0);
 
         ShaderUseProgram(shaderProgram);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
