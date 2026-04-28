@@ -1,18 +1,14 @@
-#include "cglm/vec4.h"
-#include <stdio.h>
 #define STB_IMAGE_IMPLEMENTATION
 #define GLAD_GL_IMPLEMENTATION
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include <stdbool.h>
 #include <stdlib.h>
-#include <cimgui.h>
-#include <cimgui_impl.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <stb_image/stb_image.h>
-#include <cglm/cglm.h>
-#include <cglm/types.h>
 #include "shader.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
@@ -150,10 +146,6 @@ int main() {
     glBindVertexArray(0);
 
     ShaderUseProgram(shaderProgram);
-
-    /* Literally just an array */
-    vec4 a; glm_vec4_zero(a);
-    
 
     /* Set the proper uniform sampler2D variable to the right texture unit */
     glUniform1i(ShaderUniformLocation("Texture0", shaderProgram), 0);

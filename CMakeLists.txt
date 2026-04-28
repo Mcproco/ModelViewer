@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 4.2.3)
 project(ModelViewer)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 23)
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
@@ -21,15 +21,14 @@ FetchContent_Declare(
     GIT_TAG 3.4
 )
 FetchContent_Declare(
-    cglm
+    glm
     GIT_SHALLOW TRUE
-    GIT_REPOSITORY https://github.com/recp/cglm.git
-    EXCLUDE_FROM_ALL
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
 )
 FetchContent_Declare(
-    cimgui
+    imgui
     GIT_SHALLOW TRUE
-    GIT_REPOSITORY https://github.com/cimgui/cimgui.git
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
     SOURCE_SUBDIR NULL
 )
 FetchContent_Declare(
@@ -39,24 +38,22 @@ FetchContent_Declare(
 )
 
 find_package(OpenGL REQUIRED)
-FetchContent_MakeAvailable(glad glfw3 cglm cimgui stb_image)
+FetchContent_MakeAvailable(glad glfw3 glm imgui stb_image)
 glad_add_library(glad
     STATIC
     API gl:core=3.3
     LOCATION ${PROJECT_SOURCE_DIR}/build/vendor/glad-build/${TARGET}
 )
 
-add_library(cimgui
+add_library(imgui
     STATIC
-        ${cimgui_SOURCE_DIR}/cimgui.cpp
-        ${cimgui_SOURCE_DIR}/cimgui_impl.cpp
-        ${cimgui_SOURCE_DIR}/imgui/imgui.cpp
-        ${cimgui_SOURCE_DIR}/imgui/imgui_draw.cpp
-        ${cimgui_SOURCE_DIR}/imgui/imgui_widgets.cpp
-        ${cimgui_SOURCE_DIR}/imgui/imgui_tables.cpp
-        ${cimgui_SOURCE_DIR}/imgui/imgui_demo.cpp
-        ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_glfw.cpp
-        ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
 add_library(stb_image
     INTERFACE
@@ -71,27 +68,20 @@ file(COPY ${stb_image_SOURCE_DIR}/stb_image_write.h
 
 set(STBIMAGE_INSTALL_DIR "${PROJECT_SOURCE_DIR}/build/vendor/stb_image-build")
 
-target_include_directories(cimgui
+target_include_directories(imgui
     PUBLIC
-        ${cimgui_SOURCE_DIR} 
-        ${cimgui_SOURCE_DIR}/imgui 
-        ${cimgui_SOURCE_DIR}/imgui/backends
+        ${imgui_SOURCE_DIR} 
+        ${imgui_SOURCE_DIR}/backends
 )
-target_compile_definitions(cimgui PRIVATE 
-	IMGUI_IMPL_API=extern\ \"C\"
-	IMGUI_IMPL_OPENGL_LOADER_GL3W)
-target_link_libraries(cimgui PRIVATE glfw)
-
-
 
 # -- PROJECT -- #
-add_executable(${PROJECT_NAME} src/main.c src/shader.c src/shader.h)
+add_executable(${PROJECT_NAME} src/main.cpp src/shader.cpp src/shader.h)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         glfw
         glad
-        cglm
-        cimgui
+        glm
+        imgui
 )
 target_include_directories(${PROJECT_NAME}
     PRIVATE
