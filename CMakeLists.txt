@@ -1,3 +1,4 @@
+#TODO: Please link glfw to imgui pls pls pls thank you future me
 cmake_minimum_required(VERSION 4.2.3)
 project(ModelViewer)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -55,6 +56,11 @@ add_library(imgui
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
+target_link_libraries(imgui
+    PRIVATE
+        glfw
+)
+
 add_library(stb_image
     INTERFACE
 )
