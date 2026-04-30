@@ -1,8 +1,3 @@
-#include "glm/ext/matrix_clip_space.hpp"
-#include "glm/ext/matrix_float4x4.hpp"
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/ext/vector_float3.hpp"
-#include "glm/trigonometric.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #define GLAD_GL_IMPLEMENTATION
 #include <stdbool.h>
@@ -19,6 +14,25 @@
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 const char* TITLE = "HERROW WORLD!";
+const glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
+const glm::vec3 DOWN = glm::vec3(0.0f, -1.0f, 0.0f);
+const glm::vec3 LEFT= glm::vec3(-1.0f, 0.0f, 0.0f);
+const glm::vec3 RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
+const glm::vec3 FRONT = glm::vec3(0.0f, 0.0f, -1.0f);
+const glm::vec3 BACK = glm::vec3(0.0f, 0.0f, 1.0f);
+
+const glm::vec3 cubePositions[] = {
+    glm::vec3( 0.0f, 0.0f, 0.0f),
+    glm::vec3( 2.0f, 5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f, 3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f, 2.0f, -2.5f),
+    glm::vec3( 1.5f, 0.2f, -1.5f),
+    glm::vec3(-1.3f, 1.0f, -1.5f)
+};
 
 const float vertices[] = {
    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
@@ -63,6 +77,11 @@ const unsigned int indices[] = {
 0, 1, 3,
 1, 2, 3
 };
+
+glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
 unsigned int genShaderProgram(const char *vertexSrc, const char *fragmentSrc) {
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -130,6 +149,28 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(window, true); 
     }
+
+    const float cameraSpeed = 0.05f;
+    glm::vec3 velocity = glm::vec3(0.0f);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        velocity += cameraSpeed * cameraDirection;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        velocity -= cameraSpeed * cameraDirection;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        velocity -= glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        velocity += glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
+    }
+
+
+    cameraPosition += velocity;
 }
 
 int main() {
@@ -176,27 +217,44 @@ int main() {
 
     glBindVertexArray(0);
     glUniform1i(ShaderUniformLocation("tex", shaderProgram), GL_TEXTURE0); /* Set the proper uniform sampler2D variable to the right texture unit */
+    glEnable(GL_DEPTH_TEST);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //For the FRONT and BACK of every triangle, render primative as a line
     
     glm::mat4 projection;
     glm::mat4 viewTransform = glm::mat4(1.0f);
     glm::mat4 modelTransform = glm::mat4(1.0f);
 
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f); /* Set the perspective */
-    viewTransform = glm::translate(viewTransform, glm::vec3(0.0f, 0.0f, -3.0f)); /* Translate the camera transform 3 units back */
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f); /* Set the perspective */
     modelTransform = glm::rotate(modelTransform, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    /* CAMERA INIT */
+
+    /*
+     
+        [ Rx, Ry, Rz, 0 ]
+        | Ux, Uy, Uz, 0 |
+        | Dx, Dy, Dz, 0 |
+        [ 0,  0,  0,  1 ]
+
+     */
+
+    const float radius = 10.0f;
+
+    /* MAIN LOOP */
 
     while (!glfwWindowShouldClose(window)) {
 
         processInput(window);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0, 0, 0, 0);
 
         ShaderUseProgram(shaderProgram);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vao);
+
+            viewTransform = glm::lookAt(cameraPosition, cameraPosition + cameraDirection, cameraUp);
 
             /* Set the camera transform */
             glUniformMatrix4fv(
@@ -215,14 +273,23 @@ int main() {
             );
 
             /* Set the transform of the model */
-            glUniformMatrix4fv(
-                ShaderUniformLocation("modelTransform", shaderProgram), 
-                1, 
-                GL_FALSE, 
-                glm::value_ptr(modelTransform)
-            );
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            for (unsigned int i = 0; i < 10; i++) {
+
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, cubePositions[i]);
+                model = glm::rotate(model, glm::radians(i * 20.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+                
+                glUniformMatrix4fv(
+                    ShaderUniformLocation("modelTransform", shaderProgram), 
+                    1, 
+                    GL_FALSE, 
+                    glm::value_ptr(model)
+                );
+
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
+
 
         glBindVertexArray(0);
 
