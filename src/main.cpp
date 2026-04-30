@@ -1,3 +1,6 @@
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
 #define STB_IMAGE_IMPLEMENTATION
@@ -18,18 +21,48 @@ const unsigned int HEIGHT = 600;
 const char* TITLE = "HERROW WORLD!";
 
 const float vertices[] = {
-//   X         Y         Z          R       G       B
-     0.5f,     0.5f,     0.0f,      1.0f,   0.0f,   0.0f,       1.0f, 1.0f,
-     0.5f,    -0.5f,     0.0f,      0.0f,   1.0f,   0.0f,       1.0f, 0.0f,
-    -0.5f,    -0.5f,     0.0f,      0.0f,   0.0f,   1.0f,       0.0f, 0.0f,
-    -0.5f,     0.5f,     0.0f,      0.0f,   0.0f,   1.0f,       0.0f, 1.0f,
+   -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+   -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+   -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+   -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+   -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+   -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+   -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+   -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+   -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+   -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
 };
 
 const unsigned int indices[] = {
 0, 1, 3,
 1, 2, 3
 };
-
 unsigned int genShaderProgram(const char *vertexSrc, const char *fragmentSrc) {
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -129,22 +162,29 @@ int main() {
 
             /*define the VBO's element count, data, and storage type*/
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+            //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+            //glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
             glEnableVertexAttribArray(1);
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-            glEnableVertexAttribArray(2);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); //DO NOT unbind the EBO while the VAO is active, as it will unbind the EBO from the VAO
-          glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); //define the EBO's size, data and storage type (indicies)
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); //DO NOT unbind the EBO while the VAO is active, as it will unbind the EBO from the VAO
+          //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); //define the EBO's size, data and storage type (indicies)
 
     glBindVertexArray(0);
-    glUniform1i(ShaderUniformLocation("Texture0", shaderProgram), GL_TEXTURE0); /* Set the proper uniform sampler2D variable to the right texture unit */
+    glUniform1i(ShaderUniformLocation("tex", shaderProgram), GL_TEXTURE0); /* Set the proper uniform sampler2D variable to the right texture unit */
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //For the FRONT and BACK of every triangle, render primative as a line
     
+    glm::mat4 projection;
+    glm::mat4 viewTransform = glm::mat4(1.0f);
+    glm::mat4 modelTransform = glm::mat4(1.0f);
+
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f); /* Set the perspective */
+    viewTransform = glm::translate(viewTransform, glm::vec3(0.0f, 0.0f, -3.0f)); /* Translate the camera transform 3 units back */
+    modelTransform = glm::rotate(modelTransform, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     while (!glfwWindowShouldClose(window)) {
 
@@ -154,14 +194,35 @@ int main() {
         glClearColor(0, 0, 0, 0);
 
         ShaderUseProgram(shaderProgram);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vao);
 
-            glm::mat4 transform = glm::mat4(1.0f);
-            transform = glm::rotate(transform, glm::radians((float)glfwGetTime() * 20.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            /* Set the camera transform */
+            glUniformMatrix4fv(
+                ShaderUniformLocation("viewTransform", shaderProgram), 
+                1, 
+                GL_FALSE, 
+                glm::value_ptr(viewTransform)
+            );
 
-            glUniformMatrix4fv(ShaderUniformLocation("transform", shaderProgram), 1, GL_FALSE, glm::value_ptr(transform));
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            /* Set the perspective of the camera */
+            glUniformMatrix4fv(
+                ShaderUniformLocation("projectionTransform", shaderProgram),
+                1,
+                GL_FALSE,
+                glm::value_ptr(projection)
+            );
+
+            /* Set the transform of the model */
+            glUniformMatrix4fv(
+                ShaderUniformLocation("modelTransform", shaderProgram), 
+                1, 
+                GL_FALSE, 
+                glm::value_ptr(modelTransform)
+            );
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glBindVertexArray(0);
 

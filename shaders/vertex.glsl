@@ -16,19 +16,18 @@
 */
 
 layout (location = 0) in vec3 localPosition;
-layout (location = 1) in vec3 aColor;
-layout (location = 2) in vec2 aTex;
+layout (location = 1) in vec2 aTex;
 
 out vec2 TexCoord;
-out vec3 Color;
 
-uniform mat4 transform;
+uniform mat4 modelTransform;
+uniform mat4 viewTransform;
+uniform mat4 projectionTransform;
 
 void main() {
 
     /* In this step, transform the vertex's local position to the model's transform, thus translating it into global space */
-    gl_Position = transform * vec4(localPosition, 1.0f); /* Since matrix operations are read right to left. */
+    gl_Position = projectionTransform * viewTransform * modelTransform * vec4(localPosition, 1.0f); /* Since matrix operations are read right to left. */
     TexCoord = aTex;
-    Color = aColor;
 
 }
