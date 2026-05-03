@@ -1,3 +1,7 @@
+#include "glm/common.hpp"
+#include "glm/trigonometric.hpp"
+#include <algorithm>
+#include <cmath>
 #define STB_IMAGE_IMPLEMENTATION
 #define GLAD_GL_IMPLEMENTATION
 #include <stdbool.h>
@@ -81,6 +85,8 @@ const unsigned int indices[] = {
 glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+float pitch = 0.0f;
+float yaw = -90.0f;
 
 unsigned int genShaderProgram(const char *vertexSrc, const char *fragmentSrc) {
 
@@ -173,6 +179,28 @@ void processInput(GLFWwindow *window) {
     cameraPosition += velocity;
 }
 
+void processMouse(GLFWwindow *window, double xpos, double ypos) {
+
+    static float lastX = 400.0f, lastY = 300.0f;
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+    pitch = glm::clamp(pitch, -89.9f, 89.9f);
+
+    cameraDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraDirection.y = sin(glm::radians(pitch));
+    cameraDirection.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+}
+
 int main() {
 
     init();
@@ -184,6 +212,8 @@ int main() {
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, processFrameBuffer);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, processMouse);
     gladLoadGL(glfwGetProcAddress);
 
     unsigned int texture;
