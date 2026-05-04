@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <glad/gl.h>
 #include <stdio.h>
 #include "shader.h"
@@ -42,7 +43,7 @@ void _parse(FILE *fp, unsigned int *shaderID, GLuint type, ShaderProgram program
 
     fseek(fp, 0L, SEEK_SET);
 
-    char source[bufferSize + 1];
+    char *source = new char[bufferSize + 1];
     size_t length = fread(source, sizeof(char), bufferSize, fp); /* Read <bufferSize> chars from fp into source */
     source[length++] = '\0'; /* Ensure that it is cut off... */
 
@@ -51,6 +52,7 @@ void _parse(FILE *fp, unsigned int *shaderID, GLuint type, ShaderProgram program
     glCompileShader(*shaderID);
     glAttachShader(program.programId, *shaderID);
 
+    free(source);
 }
 
 void ShaderGenProgram(const char *vertexSrcPath, const char *fragSrcPath, ShaderProgram *output) {

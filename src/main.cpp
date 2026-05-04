@@ -1,7 +1,3 @@
-#include "glm/common.hpp"
-#include "glm/trigonometric.hpp"
-#include <algorithm>
-#include <cmath>
 #define STB_IMAGE_IMPLEMENTATION
 #define GLAD_GL_IMPLEMENTATION
 #include <stdbool.h>
@@ -78,8 +74,8 @@ const float vertices[] = {
 };
 
 const unsigned int indices[] = {
-0, 1, 3,
-1, 2, 3
+    0, 1, 3,
+    1, 2, 3
 };
 
 glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -151,7 +147,7 @@ void processFrameBuffer(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window) {
+void processInput(GLFWwindow *window, float delta) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(window, true); 
     }
@@ -175,8 +171,7 @@ void processInput(GLFWwindow *window) {
         velocity += glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
     }
 
-
-    cameraPosition += velocity;
+    cameraPosition += velocity * delta;
 }
 
 void processMouse(GLFWwindow *window, double xpos, double ypos) {
@@ -269,12 +264,17 @@ int main() {
      */
 
     const float radius = 10.0f;
+    float delta = 0.0f;
+    float _time = 0.0f;
 
     /* MAIN LOOP */
 
     while (!glfwWindowShouldClose(window)) {
 
-        processInput(window);
+        delta = glfwGetTime() - _time;
+        _time = glfwGetTime();
+
+        processInput(window, delta);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0, 0, 0, 0);
